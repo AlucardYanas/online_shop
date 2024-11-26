@@ -1,18 +1,35 @@
 const { Router } = require('express');
 const { Product } = require('../../db/models');
-const { Op } = require('sequelize'); 
+const { Op } = require('sequelize');
 
 const productsRouter = Router();
-
 
 productsRouter
   .route('/')
   .get(async (req, res) => {
     try {
-      const { page = 1, limit = 10, sort = 'createdAt', order = 'DESC', filter = '' } = req.query;
+      const {
+        page = 1,
+        limit = 10,
+        sort = 'createdAt',
+        order = 'DESC',
+        name = '',
+        priceMin = 0,
+        priceMax = Infinity,
+      } = req.query;
+
       const offset = (page - 1) * limit;
 
-      const where = filter ? { name: { [Op.like]: `%${filter}%` } } : {};
+      const where = {};
+      if (name) {
+        where.name = { [Op.like]: `%${name}%` };
+      }
+      if (priceMin) {
+        where.price = { ...where.price, [Op.gte]: +priceMin };
+      }
+      if (priceMax && priceMax !== Infinity) {
+        where.price = { ...where.price, [Op.lte]: +priceMax };
+      }
 
       const products = await Product.findAndCountAll({
         where,
@@ -28,7 +45,7 @@ productsRouter
         totalPages: Math.ceil(products.count / limit),
       });
     } catch (error) {
-      console.log('Ошибка получения списка продуктов', error);
+      console.error('Ошибка получения списка продуктов:', error);
       res.status(500).json({
         message: 'Ошибка получения списка продуктов',
       });
@@ -40,7 +57,7 @@ productsRouter
       const newProduct = await Product.create({ name, description, price, discountedPrice, sku, photo });
       res.status(201).json(newProduct);
     } catch (error) {
-      console.log('Ошибка добавления продукта', error);
+      console.error('Ошибка добавления продукта:', error);
       res.status(500).json({
         message: 'Ошибка добавления продукта',
       });
@@ -58,7 +75,7 @@ productsRouter
       }
       res.status(200).json(product);
     } catch (error) {
-      console.log('Ошибка получения продукта', error);
+      console.error('Ошибка получения продукта:', error);
       res.status(500).json({
         message: 'Ошибка получения продукта',
       });
@@ -75,7 +92,7 @@ productsRouter
       await product.update({ name, description, price, discountedPrice, sku, photo });
       res.status(200).json(product);
     } catch (error) {
-      console.log('Ошибка редактирования продукта', error);
+      console.error('Ошибка редактирования продукта:', error);
       res.status(500).json({
         message: 'Ошибка редактирования продукта',
       });
@@ -91,7 +108,7 @@ productsRouter
       await product.destroy();
       res.sendStatus(200);
     } catch (error) {
-      console.log('Ошибка удаления продукта', error);
+      console.error('Ошибка удаления продукта:', error);
       res.status(500).json({
         message: 'Ошибка удаления продукта',
       });
@@ -100,10 +117,28 @@ productsRouter
 
 productsRouter.get('/ssr/catalog', async (req, res) => {
   try {
-    const { page = 1, limit = 10, sort = 'createdAt', order = 'DESC', filter = '' } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      sort = 'createdAt',
+      order = 'DESC',
+      name = '',
+      priceMin = 0,
+      priceMax = Infinity,
+    } = req.query;
+
     const offset = (page - 1) * limit;
 
-    const where = filter ? { name: { [Op.like]: `%${filter}%` } } : {};
+    const where = {};
+    if (name) {
+      where.name = { [Op.like]: `%${name}%` };
+    }
+    if (priceMin) {
+      where.price = { ...where.price, [Op.gte]: +priceMin };
+    }
+    if (priceMax && priceMax !== Infinity) {
+      where.price = { ...where.price, [Op.lte]: +priceMax };
+    }
 
     const products = await Product.findAndCountAll({
       where,
@@ -119,13 +154,12 @@ productsRouter.get('/ssr/catalog', async (req, res) => {
       totalPages: Math.ceil(products.count / limit),
     });
   } catch (error) {
-    console.log('Ошибка получения каталога продуктов для SSR', error);
+    console.error('Ошибка получения каталога продуктов для SSR:', error);
     res.status(500).json({
       message: 'Ошибка получения каталога продуктов для SSR',
     });
   }
 });
-
 
 productsRouter.get('/ssr/product/:id', async (req, res) => {
   try {
@@ -136,7 +170,7 @@ productsRouter.get('/ssr/product/:id', async (req, res) => {
     }
     res.status(200).json(product);
   } catch (error) {
-    console.log('Ошибка получения продукта для SSR', error);
+    console.error('Ошибка получения продукта для SSR:', error);
     res.status(500).json({
       message: 'Ошибка получения продукта для SSR',
     });

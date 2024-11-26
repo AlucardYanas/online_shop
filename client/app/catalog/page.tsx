@@ -1,20 +1,50 @@
-import { getProducts } from '@/features/products/api';
+'use client';
+
 import { Filters, ProductCard } from '@/features/products/components';
+import { useGetProducts } from '@/features/products/hooks';
+import { useFilters } from '@/features/products/hooks';
 
-export const dynamic = 'force-dynamic'; // Включение SSR
+export default function CatalogPage() {
+  const { filters, updateFilter, applyFilters } = useFilters();
+  const { data: productsResponse, isLoading, isError } = useGetProducts(filters);
 
-export default async function CatalogPage({ searchParams }: { searchParams: any }) {
-  const productsResponse = await getProducts(searchParams); // API возвращает объект
-  const products = productsResponse?.data || []; // Извлекаем массив продуктов
+  const products = productsResponse?.data || [];
+  console.log(filters);
 
   return (
-    <div>
-      <Filters />
-      <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
+    <div style={{ padding: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: '20px',
+        }}
+      >
+        <Filters
+          filters={filters}
+          onFilter={applyFilters}
+          onUpdateFilter={updateFilter}
+        />
       </div>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : isError ? (
+        <p>Error loading products</p>
+      ) : (
+        <div
+          style={{
+            display: 'grid',
+            gap: '16px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          }}
+        >
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
