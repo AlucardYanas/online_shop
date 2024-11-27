@@ -17,8 +17,10 @@ export const AddProductForm = ({ product }: { product?: any }) => {
 
   const onSubmit = (data: any) => {
     if (product) {
+      console.log('Updating product:', data); // Для отладки
       updateProduct({ id: product.id, product: data }); // Если передан продукт, обновляем
     } else {
+      console.log('Adding product:', data); // Для отладки
       addProduct(data); // Если продукта нет, добавляем новый
     }
   };
