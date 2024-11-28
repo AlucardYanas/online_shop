@@ -1,9 +1,25 @@
 const { Router } = require('express');
 const { Product } = require('../../db/models');
 const { Op } = require('sequelize');
+const multer = require('multer');
+const path = require('path');
 
 const productsRouter = Router();
 
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, '../../public/uploads')); // Папка для загрузки
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, `${uniqueSuffix}-${file.originalname}`);
+  },
+});
+
+const upload = multer({ storage });
+
+// Роуты
 productsRouter
   .route('/')
   .get(async (req, res) => {
@@ -51,10 +67,24 @@ productsRouter
       });
     }
   })
-  .post(async (req, res) => {
+  .post(upload.single('photo'), async (req, res) => {
     try {
-      const { name, description, price, discountedPrice, sku, photo } = req.body;
-      const newProduct = await Product.create({ name, description, price, discountedPrice, sku, photo });
+      const { name, description, price, discountedPrice, sku } = req.body;
+      const photo = req.file ? `/uploads/${req.file.filename}` : null;
+
+      if (!photo) {
+        return res.status(400).json({ message: 'Фото обязательно' });
+      }
+
+      const newProduct = await Product.create({
+        name,
+        description,
+        price,
+        discountedPrice,
+        sku,
+        photo,
+      });
+
       res.status(201).json(newProduct);
     } catch (error) {
       console.error('Ошибка добавления продукта:', error);
@@ -81,15 +111,26 @@ productsRouter
       });
     }
   })
-  .patch(async (req, res) => {
+  .patch(upload.single('photo'), async (req, res) => {
     try {
       const { id } = req.params;
-      const { name, description, price, discountedPrice, sku, photo } = req.body;
+      const { name, description, price, discountedPrice, sku } = req.body;
+      const photo = req.file ? `/uploads/${req.file.filename}` : undefined;
+
       const product = await Product.findByPk(id);
       if (!product) {
         return res.status(404).json({ message: 'Продукт не найден' });
       }
-      await product.update({ name, description, price, discountedPrice, sku, photo });
+
+      await product.update({
+        name,
+        description,
+        price,
+        discountedPrice,
+        sku,
+        ...(photo ? { photo } : {}),
+      });
+
       res.status(200).json(product);
     } catch (error) {
       console.error('Ошибка редактирования продукта:', error);

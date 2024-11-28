@@ -1,6 +1,6 @@
 'use client';
 
-import { Filters, ProductCard } from '@/features/products/components';
+import { AddProductForm, Filters, ProductCard } from '@/features/products/components';
 import { useGetProducts } from '@/features/products/hooks';
 import { useFilters } from '@/features/products/hooks';
 
@@ -39,6 +39,7 @@ export default function CatalogPage() {
             gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
           }}
         >
+          <AddProductForm />
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

@@ -3,18 +3,19 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema } from '../../../shared/utils/validation';
-import { useAddProduct } from '../hooks';
+import { useUpdateProduct } from '../hooks';
 import { Button, TextField } from '../../../shared/ui';
 import { useState } from 'react';
 
-export const AddProductForm = () => {
+export const UpdateProductForm = ({ product }: { product: any }) => {
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(productSchema),
+    defaultValues: product || {},
   });
 
   const [file, setFile] = useState<File | null>(null);
 
-  const { mutate: addProduct, isLoading: isAdding } = useAddProduct();
+  const { mutate: updateProduct, isLoading: isUpdating } = useUpdateProduct();
 
   const onSubmit = (data: any) => {
     const formData = new FormData();
@@ -22,12 +23,14 @@ export const AddProductForm = () => {
     if (file) {
       formData.append('photo', file);
     }
+    console.log('Submitting form with data:', formData);
 
-    addProduct(formData);
+    updateProduct({ id: product.id, product: formData });
   };
 
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} style={{ marginBottom: '20px' }}>
+    <form onSubmit={handleSubmit(onSubmit)}>
       <TextField
         label="Name"
         {...register('name')}
@@ -66,8 +69,8 @@ export const AddProductForm = () => {
         onChange={(e) => setFile(e.target.files?.[0] || null)}
         style={{ margin: '10px 0' }}
       />
-      <Button type="submit" disabled={isAdding}>
-        {isAdding ? 'Adding...' : 'Add Product'}
+      <Button type="submit" disabled={isUpdating}>
+        {isUpdating ? 'Updating...' : 'Update Product'}
       </Button>
     </form>
   );

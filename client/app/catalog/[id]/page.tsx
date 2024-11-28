@@ -1,10 +1,11 @@
 import { getProductById } from '@/features/products/api';
-import { AddProductForm } from '@/features/products/components';
+import { UpdateProductForm } from '@/features/products/components/UpdateProductForm';
 
 export const dynamic = 'force-dynamic'; 
 
 export default async function ProductPage({ params }: { params: { id: string } }) {
-  const {id} = params;
+  
+  const {id} = await params;
   
   if(!id) {
     return <p>Product ID not found in route parameters</p>;
@@ -14,8 +15,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
   if(!product) {
     return <p>Product not found</p>
   }
-  console.log(product);
-  return (
+  console.log('Product fetched:', product);  return (
     <div>
        <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h1>{product.name}</h1>
@@ -32,7 +32,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
       )}
     </div>
       <h1>Edit Product</h1>
-      <AddProductForm product={product} />
+      <UpdateProductForm product={product} />
     </div>
   );
 }
