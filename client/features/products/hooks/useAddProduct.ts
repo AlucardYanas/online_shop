@@ -1,29 +1,40 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { addProduct } from '@/features/products/api';
+import { FormDataProduct, Product } from '@/shared/types';
 
 export const useAddProduct = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: addProduct,
-    onMutate: async (newProduct) => {
+  return useMutation<Product, Error, FormDataProduct>({
+    mutationFn: (formDataProduct: FormDataProduct) => addProduct(formDataProduct),
+    onMutate: async (newProduct: FormDataProduct) => {
       await queryClient.cancelQueries({ queryKey: ['products'] });
 
-      const previousProducts = queryClient.getQueryData(['products']);
+      const previousProducts = queryClient.getQueryData<{ data: Product[] }>(['products']);
 
-      queryClient.setQueryData(['products'], (old: any) => [
-        ...(old || []),
-        newProduct,
-      ]);
+      const tempProduct: Product = {
+        ...newProduct,
+        id: `${Date.now()}`, 
+        price: parseFloat(newProduct.price),
+        discountedPrice: parseFloat(newProduct.discountedPrice),
+        photo: newProduct.photo ? URL.createObjectURL(newProduct.photo) : '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['products'], (old: { data: Product[] } | undefined) => {
+        if (old) {
+          return {
+            ...old,
+            data: [...old.data, tempProduct],
+          };
+        }
+        return old;
+      });
 
       return { previousProducts };
     },
-    onError: (err, newProduct, context) => {
-      if (context?.previousProducts) {
-        queryClient.setQueryData(['products'], context.previousProducts);
-      }
-      console.error('Error adding product:', err);
-    },
+    
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },

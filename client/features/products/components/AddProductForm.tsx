@@ -6,24 +6,39 @@ import { productSchema } from '../../../shared/utils/validation';
 import { useAddProduct } from '../hooks';
 import { Button, TextField } from '../../../shared/ui';
 import { useState } from 'react';
+import { FormDataProduct } from '@/shared/types';
+
 
 export const AddProductForm = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormDataProduct>({
     resolver: zodResolver(productSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      price: '',
+      discountedPrice: '',
+      sku: '',
+      photo: undefined,
+    },
   });
 
   const [file, setFile] = useState<File | null>(null);
 
-  const { mutate: addProduct, isLoading: isAdding } = useAddProduct();
+  const { mutate: addProduct, status: isAdding } = useAddProduct();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormDataProduct) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('price', data.price);
+    formData.append('discountedPrice', data.discountedPrice);
+    formData.append('sku', data.sku);
+
     if (file) {
       formData.append('photo', file);
     }
 
-    addProduct(formData);
+    addProduct(formData as any); 
   };
 
   return (
@@ -66,7 +81,7 @@ export const AddProductForm = () => {
         onChange={(e) => setFile(e.target.files?.[0] || null)}
         style={{ margin: '10px 0' }}
       />
-      <Button type="submit" disabled={isAdding}>
+      <Button type="submit" disabled={isAdding === 'pending'}>
         {isAdding ? 'Adding...' : 'Add Product'}
       </Button>
     </form>

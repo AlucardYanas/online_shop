@@ -1,1 +1,1 @@
-export type { Product } from  './product.ts';
+export type { Product, FormDataProduct, FormDataProductWithId } from  './product.ts';

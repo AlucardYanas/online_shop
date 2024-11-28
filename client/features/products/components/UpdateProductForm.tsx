@@ -1,33 +1,37 @@
-'use client';
-
+'use client'
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { productSchema } from '../../../shared/utils/validation';
 import { useUpdateProduct } from '../hooks';
 import { Button, TextField } from '../../../shared/ui';
 import { useState } from 'react';
+import { FormDataProductWithId } from '@/shared/types';
 
-export const UpdateProductForm = ({ product }: { product: any }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm({
+export const UpdateProductForm = ({ product }: { product: FormDataProductWithId }) => {
+  const { register, handleSubmit, formState: { errors } } = useForm<FormDataProductWithId>({
     resolver: zodResolver(productSchema),
     defaultValues: product || {},
   });
 
   const [file, setFile] = useState<File | null>(null);
 
-  const { mutate: updateProduct, isLoading: isUpdating } = useUpdateProduct();
+  const { mutate: updateProduct, status: isUpdating } = useUpdateProduct();
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormDataProductWithId) => {
     const formData = new FormData();
-    Object.keys(data).forEach((key) => formData.append(key, data[key]));
+    formData.append('name', data.name);
+    formData.append('description', data.description);
+    formData.append('price', data.price);
+    formData.append('discountedPrice', data.discountedPrice);
+    formData.append('sku', data.sku);
+
     if (file) {
       formData.append('photo', file);
     }
-    console.log('Submitting form with data:', formData);
 
-    updateProduct({ id: product.id, product: formData });
+    
+    updateProduct({ id: product.id, product: formData }); 
   };
-
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -69,7 +73,7 @@ export const UpdateProductForm = ({ product }: { product: any }) => {
         onChange={(e) => setFile(e.target.files?.[0] || null)}
         style={{ margin: '10px 0' }}
       />
-      <Button type="submit" disabled={isUpdating}>
+      <Button type="submit" disabled={isUpdating === 'pending'}>
         {isUpdating ? 'Updating...' : 'Update Product'}
       </Button>
     </form>

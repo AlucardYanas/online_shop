@@ -1,13 +1,14 @@
+import { FormDataProductWithId } from '@/shared/types';
 import api from '@/shared/utils/axiosInstance';
 
-export const updateProduct = async (id: string, product: any) => {
+export const updateProduct = async (id: string, product: FormDataProductWithId) => {
   console.log('Preparing FormData for product:', product);
 
   const formData = new FormData();
   formData.append('name', product.name);
   formData.append('description', product.description);
-  formData.append('price', product.price);
-  formData.append('discountedPrice', product.discountedPrice);
+  formData.append('price', product.price); 
+  formData.append('discountedPrice', product.discountedPrice); 
   formData.append('sku', product.sku);
 
   if (product.photo) {

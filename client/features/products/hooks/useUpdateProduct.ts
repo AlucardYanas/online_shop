@@ -1,36 +1,50 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateProduct } from '../api';
+import { updateProduct } from '@/features/products/api';
+import { FormDataProductWithId, Product } from '@/shared/types';
 
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: ({ id, product }: { id: string; product: any }) => {
-      console.log('Calling updateProduct with:', { id, product });
-      return updateProduct(id, product);
-    },
-    onMutate: async ({ id, product }) => {
-      console.log('Optimistically updating cache for product ID:', id);
+  return useMutation<Product, Error, FormDataProductWithId>({
+    mutationFn: (formDataProduct: FormDataProductWithId) =>
+      updateProduct(formDataProduct.id, formDataProduct),
+    onMutate: async (updatedProductData: FormDataProductWithId) => {
       await queryClient.cancelQueries({ queryKey: ['products'] });
 
-      const previousProducts = queryClient.getQueryData(['products']);
-      console.log('Previous products:', previousProducts);
+      const previousProducts = queryClient.getQueryData<{ data: Product[] }>([
+        'products',
+      ]);
 
-      queryClient.setQueryData(['products'], (old: any) =>
-        (old || []).map((p: any) => (p.id === id ? { ...p, ...product } : p))
+      const tempProduct: Product = {
+        ...updatedProductData,
+        price: parseFloat(updatedProductData.price),
+        discountedPrice: parseFloat(updatedProductData.discountedPrice),
+        photo: updatedProductData.photo
+          ? URL.createObjectURL(updatedProductData.photo)
+          : '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(
+        ['products'],
+        (old: { data: Product[] } | undefined) => {
+          if (old) {
+            return {
+              ...old,
+              data: old.data.map((product) =>
+                product.id === updatedProductData.id ? tempProduct : product
+              ),
+            };
+          }
+          return old;
+        }
       );
 
       return { previousProducts };
     },
-    onError: (err, { id, product }, context) => {
-      console.error('Error updating product:', err);
-      if (context?.previousProducts) {
-        console.log('Restoring previous cache state');
-        queryClient.setQueryData(['products'], context.previousProducts);
-      }
-    },
+
     onSettled: () => {
-      console.log('Invalidating cache for products');
       queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });

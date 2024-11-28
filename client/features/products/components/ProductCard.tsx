@@ -5,7 +5,7 @@ import { Button } from '@/shared/ui';
 import Link from 'next/link';
 
 export const ProductCard = ({ product }: { product: Product }) => {
-  const { mutate: deleteProduct, isLoading } = useDeleteProduct();
+  const { mutate: deleteProduct, status } = useDeleteProduct();
 
   const handleDelete = () => {
     deleteProduct(product.id);
@@ -20,7 +20,7 @@ export const ProductCard = ({ product }: { product: Product }) => {
           <p>Price: ${product.price}</p>
       
       </Link>
-      <Button onClick={handleDelete} disabled={isLoading} variant="outlined" color="error" style={{ marginTop: '10px' }}>
+      <Button onClick={handleDelete} disabled={status === 'pending'} variant="outlined" color="error" style={{ marginTop: '10px' }}>
         Delete
       </Button>
     </div>

@@ -3,6 +3,7 @@
 import { AddProductForm, Filters, ProductCard } from '@/features/products/components';
 import { useGetProducts } from '@/features/products/hooks';
 import { useFilters } from '@/features/products/hooks';
+import { Product } from '@/shared/types';
 
 export default function CatalogPage() {
   const { filters, updateFilter, applyFilters } = useFilters();
@@ -40,7 +41,7 @@ export default function CatalogPage() {
           }}
         >
           <AddProductForm />
-          {products.map((product) => (
+          {products.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>

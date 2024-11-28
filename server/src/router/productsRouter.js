@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Роуты
+
 productsRouter
   .route('/')
   .get(async (req, res) => {

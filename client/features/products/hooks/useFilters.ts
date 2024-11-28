@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export const useFilters = (initialFilters = { name: '', priceMin: '', priceMax: '' }) => {
+export const useFilters = (initialFilters = { name: '', priceMin: '', priceMax: '', sort: '' }) => {
   const [filters, setFilters] = useState(initialFilters);
   const router = useRouter();
 

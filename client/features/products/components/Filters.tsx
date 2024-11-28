@@ -31,7 +31,7 @@ export const Filters = ({
     Object.entries(localFilters).forEach(([key, value]) => {
       onUpdateFilter(key, value);
     });
-    onFilter(); // Отправляем запрос только после применения всех изменений
+    onFilter(); 
   };
 
   return (
